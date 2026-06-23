@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Capacity Wall — how much a perceptron can hold (α = 2)</title>
+<meta name="description" content="MIDDLING perceptron theory — Cover (1965) & Gardner (1988): a perceptron with d weights can store about 2d random patterns. Below α=N/d=2 almost any labelling is separable; above it, almost none. A sharp phase transition, live from Cover's exact count. Confidence: WELL-SUPPORTED — Cover's counting is exact; Gardner's αc=2 uses the (heuristic) replica method. David Lee Wise, two-layer honest.">
+<style>
+  :root{--bg:#0a0710;--panel:#140d20;--panel2:#1b1230;--edge:#2e2148;--ink:#ece3f7;--dim:#9a86bd;--faint:#6b5a8c;
+    --violet:#a78bfa;--violet2:#c4b5fd;--glow:#7c3aed;--ok:#34d399;--rose:#fb7185;--amber:#fbbf24;
+    --mono:'SFMono-Regular',ui-monospace,'Cascadia Code',Menlo,Consolas,monospace;--serif:'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif;}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--serif);line-height:1.55;
+    background-image:radial-gradient(1200px 600px at 70% -10%,#2a2410 0%,transparent 60%),radial-gradient(900px 500px at 0% 100%,#150b28 0%,transparent 55%);}
+  .wrap{max-width:1040px;margin:0 auto;padding:42px 26px 90px}
+  header{border-bottom:1px solid var(--edge);padding-bottom:22px;margin-bottom:24px}
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--violet);opacity:.9}
+  h1{font-size:34px;line-height:1.12;margin:.32em 0 .18em;font-weight:600}h1 em{color:var(--violet2);font-style:italic}
+  .sub{color:var(--dim);font-size:15.5px;max-width:76ch}
+  .lin{font-family:var(--mono);font-size:11.5px;color:var(--faint);margin-top:14px}.lin b{color:var(--violet)}
+  .verdict{display:flex;align-items:center;gap:14px;border-radius:12px;padding:14px 18px;margin:22px 0;border:1px solid;background:rgba(251,191,36,.07);border-color:#7a5d18;}
+  .verdict .badge{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.14em;padding:5px 11px;border-radius:7px;white-space:nowrap;background:var(--amber);color:#1a1304}
+  .verdict .txt{font-size:13.5px;color:var(--dim)}.verdict .txt b{color:var(--ink)}
+  section{margin:34px 0}
+  h2{font-size:13px;font-family:var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--violet2);border-left:2px solid var(--glow);padding-left:11px;margin:0 0 6px}
+  .lede{color:var(--dim);font-size:15px;margin:0 0 18px;max-width:80ch}
+  .panel{background:linear-gradient(180deg,var(--panel),#100a1b);border:1px solid var(--edge);border-radius:14px;padding:20px;box-shadow:0 24px 60px -40px #000}
+  .controls{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-bottom:16px}
+  button{font-family:var(--mono);font-size:12px;color:var(--ink);background:#241738;border:1px solid var(--edge);border-radius:8px;padding:8px 13px;cursor:pointer}
+  button:hover{background:#2e1f48;border-color:var(--violet)}
+  label.sl{font-family:var(--mono);font-size:11px;color:var(--dim);display:flex;align-items:center;gap:8px}
+  input[type=range]{accent-color:var(--violet);width:150px}
+  canvas{display:block;width:100%;border-radius:10px;background:#0c0717;border:1px solid var(--edge)}
+  .cap{font-family:var(--mono);font-size:11px;color:var(--faint);margin-top:7px}
+  .reads{display:flex;gap:26px;flex-wrap:wrap;margin-top:14px}
+  .stat .v{font-family:var(--mono);font-size:24px;font-weight:600}.stat .k{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+  .eq{font-family:var(--mono);font-size:13px;color:var(--violet2);background:#0e0a18;border:1px solid var(--edge);border-radius:8px;padding:9px 11px;display:inline-block;margin:4px 0}
+  .note{color:var(--dim);font-size:13.5px;border-left:2px solid var(--edge);padding-left:13px;margin:16px 0 0}
+  footer{margin-top:46px;border-top:1px solid var(--edge);padding-top:18px;color:var(--faint);font-family:var(--mono);font-size:11px;line-height:1.7}
+  footer a,.bar a{color:var(--violet)}.bar{font-family:var(--mono);font-size:11.5px;margin-bottom:16px}.bar a{text-decoration:none;border-bottom:1px dotted #4a3a6b}
+  code{font-family:var(--mono);color:var(--violet2);background:#170f28;padding:1px 5px;border-radius:5px}
+  b.ok{color:var(--ok)}b.am{color:var(--amber)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="bar"><a href="https://davidwise01.github.io/ud0/">◄ UD0</a> &nbsp; <a href="https://davidwise01.github.io/perceptron-convergence/">← convergence</a> &nbsp; <a href="https://davidwise01.github.io/perceptron-in-silicon/">perceptron in silicon</a> &nbsp; <a href="https://davidwise01.github.io/the-deep-neuron/">→ the deep neuron</a></div>
+<header>
+  <div class="kicker">Perceptron theory · II of III · the middling one</div>
+  <h1>The capacity <em>wall</em></h1>
+  <div class="sub">Convergence tells you a perceptron will learn a separable pattern. This asks the harder question: <em>how much can one hold?</em> Feed it random labelled points and there's a hard ceiling — about <em>two patterns per weight</em>. Below it, almost any labelling is learnable. Above it, almost none. And the switch is sharp: a phase transition, the same kind of math as ice turning to water.</div>
+  <div class="lin"><b>1965</b> Cover counts the separable labellings &nbsp;→&nbsp; <b>1988</b> Gardner derives the capacity by statistical physics &nbsp;→&nbsp; the wall: <b>α = N/d = 2</b></div>
+</header>
+
+<div class="verdict">
+  <span class="badge">◐ WELL-SUPPORTED</span>
+  <span class="txt"><b>Cover (1965) · Gardner (1988).</b> The result is solid and the curve below is <b>exact</b> (Cover's function-counting). The famous capacity <code>αc = 2</code> from Gardner uses the <b>replica method</b> — a brilliant statistical-physics trick that was non-rigorous for decades (since proven in cases). Strong result; one of its two proofs is heuristic. Hence: middling, not bedrock.</span>
+</div>
+
+<section>
+  <h2>The wall, exact</h2>
+  <p class="lede">Take <em>d</em> weights and <em>N</em> random points, each given a random ±1 label (load factor <code>α = N/d</code>). Cover counted exactly what fraction of all possible labellings a perceptron can separate: <span class="eq">P = 2·Σ<sub>k=0..d−1</sub> C(N−1, k) / 2<sup>N</sup></span> It's <b class="ok">1</b> for small α and crashes to <b>0</b> past the wall — passing through exactly <b class="am">0.5 at α = 2</b>. Drag <em>d</em> up and watch the slope sharpen into a vertical cliff: in the limit, a true phase transition.</p>
+  <div class="panel">
+    <div class="controls">
+      <label class="sl">dimensions d <input type="range" id="d" min="3" max="120" value="25"><span id="dv" style="color:var(--violet2)">25</span></label>
+      <label class="sl">probe α <input type="range" id="alpha" min="20" max="380" value="200"></label>
+    </div>
+    <canvas id="cv" width="900" height="360"></canvas>
+    <div class="cap">x: load α = N/d (0→4) · y: fraction of labellings the perceptron can separate · amber line = the α=2 wall · violet dot = your probe</div>
+    <div class="reads">
+      <div class="stat"><div class="v" id="pa" style="color:var(--violet2)">—</div><div class="k">P(separable) at probe α</div></div>
+      <div class="stat"><div class="v" id="np" style="color:var(--dim)">—</div><div class="k">N = α·d patterns</div></div>
+      <div class="stat"><div class="v" id="cap" style="color:var(--amber)">—</div><div class="k">capacity 2d (the wall)</div></div>
+    </div>
+    <div class="note" id="note">At small d the wall is a gentle slope — small networks are forgiving. Crank d to 120 and the curve snaps to a near-vertical edge at α=2: a big perceptron is essentially binary — it stores everything up to 2d patterns and nothing past it. That sharpening <em>is</em> the thermodynamic limit, the signature of a real phase transition.</div>
+  </div>
+</section>
+
+<section>
+  <h2>Why it's middling, said plainly</h2>
+  <p class="lede"><b style="color:var(--ok)">What's rock-solid:</b> Cover's count is a finite combinatorial fact — the curve above is not a fit or a simulation, it's the exact formula. The capacity of <em>2d</em> for random points in general position is proven.</p>
+  <p class="note" style="border-color:var(--amber)"><b style="color:var(--amber)">Where it softens:</b> (1) Gardner's elegant <code>αc=2</code> derivation runs on the <b>replica method</b>, which assumes a symmetry that wasn't rigorously justified for decades (and only proven in special cases since). (2) It's capacity for <b>random</b> patterns — real data has structure, and structured patterns change the number. (3) The leap from "a perceptron stores 2d" to "this is why big neural nets generalize" is an <b>active research frontier</b> (double descent, the interpolation threshold) — suggestive, not settled. The wall is real; its reach into modern deep learning is the open part.</p>
+</section>
+
+<footer>
+  THE CAPACITY WALL · perceptron theory II/III · confidence: WELL-SUPPORTED<br>
+  curve is Cover's exact count, verified in Node: fraction separable = 0.5000 exactly at α=2 for d=8,20,50 (→1 below, →0 above)<br>
+  Cover, <i>Geometrical and statistical properties of systems of linear inequalities</i> (1965) · Gardner, <i>The space of interactions in neural network models</i> (1988)<br>
+  sibling sheets: <a href="https://davidwise01.github.io/perceptron-convergence/">convergence</a> · <a href="https://davidwise01.github.io/perceptron-in-silicon/">perceptron in silicon</a> · governor David Lee Wise · CC-BY-ND-4.0
+</footer>
+</div>
+<script>
+"use strict";
+(function(){
+  const cv=document.getElementById('cv'),g=cv.getContext('2d');
+  let W,Hh,dpr;
+  function fit(){const r=cv.getBoundingClientRect();dpr=window.devicePixelRatio||1;cv.width=r.width*dpr;cv.height=r.height*dpr;g.setTransform(dpr,0,0,dpr,0,0);W=r.width;Hh=r.height;}
+  function logC(n,k){ if(k<0||k>n)return -Infinity; let s=0;for(let i=0;i<k;i++)s+=Math.log(n-i)-Math.log(i+1);return s;}
+  function frac(N,d){ // 2*sum_{k=0}^{d-1} C(N-1,k) / 2^N  (Cover); =1 if N<=d
+    if(N<=d) return 1; if(N<1) return 1;
+    let mx=-1e9,t=[]; for(let k=0;k<d;k++){const l=logC(N-1,k); t.push(l); if(l>mx)mx=l;}
+    let sum=t.reduce((a,l)=>a+Math.exp(l-mx),0);
+    let lp=Math.log(2)+mx+Math.log(sum)-N*Math.log(2);
+    return Math.min(1,Math.exp(lp));
+  }
+  let d=25, probeA=2.0;
+  function draw(){
+    fit(); g.clearRect(0,0,W,Hh);
+    const padL=46,padR=16,padT=16,padB=34; const x0=padL,x1=W-padR,y0=Hh-padB,y1=padT;
+    const amax=4;
+    const X=a=>x0+(a/amax)*(x1-x0), Y=p=>y0+(1-p)*(y1-y0)*-1+ (y1-y0)*0; // see below
+    const PY=p=>y0-(p)*(y0-y1);
+    // grid
+    g.strokeStyle='#1c1430';g.lineWidth=1;g.fillStyle='#4a3a6b';g.font='10px ui-monospace,monospace';
+    for(let a=0;a<=amax;a++){const x=X(a);g.beginPath();g.moveTo(x,y1);g.lineTo(x,y0);g.stroke();g.textAlign='center';g.fillText('α='+a,x,y0+16);}
+    [0,.5,1].forEach(p=>{const y=PY(p);g.strokeStyle='#1c1430';g.beginPath();g.moveTo(x0,y);g.lineTo(x1,y);g.stroke();g.textAlign='right';g.fillStyle='#4a3a6b';g.fillText(p.toFixed(1),x0-6,y+3);});
+    // the alpha=2 wall
+    g.strokeStyle='rgba(251,191,36,.55)';g.lineWidth=1.5;g.setLineDash([5,5]);g.beginPath();g.moveTo(X(2),y1);g.lineTo(X(2),y0);g.stroke();g.setLineDash([]);
+    g.fillStyle='#fbbf24';g.textAlign='center';g.fillText('wall · α=2',X(2),y1+12);
+    // the curve
+    g.strokeStyle='#a78bfa';g.lineWidth=2.5;g.beginPath();
+    let first=true;
+    for(let px=0;px<=560;px++){const a=(px/560)*amax;const N=Math.round(a*d);const p=frac(N,d);const x=X(a),y=PY(p);first?g.moveTo(x,y):g.lineTo(x,y);first=false;}
+    g.stroke();
+    // fill under
+    g.lineTo(X(amax),y0);g.lineTo(X(0),y0);g.closePath();g.fillStyle='rgba(124,58,237,.10)';g.fill();
+    // probe dot
+    const Np=Math.round(probeA*d),pp=frac(Np,d);
+    const dotx=X(probeA),doty=PY(pp);
+    g.strokeStyle='rgba(196,181,253,.4)';g.lineWidth=1;g.beginPath();g.moveTo(dotx,y0);g.lineTo(dotx,doty);g.stroke();
+    g.fillStyle='#c4b5fd';g.beginPath();g.arc(dotx,doty,6,0,7);g.fill();g.strokeStyle='#0a0710';g.lineWidth=2;g.stroke();
+    document.getElementById('pa').textContent=(pp*100).toFixed(pp>0.999||pp<0.001?0:1)+'%';
+    document.getElementById('np').textContent=Np;
+    document.getElementById('cap').textContent=(2*d);
+    document.getElementById('dv').textContent=d;
+  }
+  document.getElementById('d').oninput=function(){d=+this.value;draw();};
+  document.getElementById('alpha').oninput=function(){probeA=(+this.value)/100;draw();};
+  draw();window.addEventListener('resize',draw);
+})();
+</script>
+</body>
+</html>
