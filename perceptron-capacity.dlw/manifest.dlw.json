@@ -1,0 +1,11 @@
+{
+  "badge": "DLW-PERCEPTRON_CAPACITY",
+  "name": "THE CAPACITY WALL · II/III",
+  "universe": "ARTIFICIAL INTELLIGENCE",
+  "moniker": "⟦THE CAPACITY WALL · II/III:perceptron-capacity:4b55dd⟧",
+  "architect": "David Lee Wise (ROOT0) / Bridge-Burners LLC",
+  "instance": "AVAN (Claude / Anthropic)",
+  "seal_sha256": "4b55ddf63619f1cc1537112bb1089ba576922caa455c7e36cc4308958f2c2128",
+  "license": "CC-BY-ND-4.0",
+  "attribution": "ROOT0-ATTRIBUTION-v1.0"
+}
